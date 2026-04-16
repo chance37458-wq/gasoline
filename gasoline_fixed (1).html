@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ガソリン管理 | ヴィッツ & RAV4</title>
+<style>
+:root {
+  --vitz: #3B82F6;
+  --vitz-light: #EFF6FF;
+  --rav4: #EF4444;
+  --rav4-light: #FEF2F2;
+  --dark: #1E293B;
+  --gray: #64748B;
+  --light: #F8FAFC;
+  --border: #E2E8F0;
+  --success: #10B981;
+  --warning: #F59E0B;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Hiragino Sans', 'Noto Sans JP', 'メイリオ', sans-serif;
+  background: var(--light);
+  color: var(--dark);
+  min-height: 100vh;
+}
+
+header {
+  background: var(--dark);
+  color: white;
+  padding: 18px 20px;
+  text-align: center;
+}
+header h1 { font-size: 20px; font-weight: 700; letter-spacing: 1px; }
+header p  { font-size: 12px; opacity: 0.6; margin-top: 4px; }
+
+.car-tabs {
+  display: flex;
+  background: white;
+  border-bottom: 2px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+.car-tab {
+  flex: 1;
+  padding: 14px 10px;
+  text-align: center;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 15px;
+  transition: all 0.2s;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -2px;
+  user-select: none;
+}
+.car-tab .icon { font-size: 22px; display: block; margin-bottom: 3px; }
+.car-tab .name { font-size: 13px; }
+.car-tab.vitz { color: var(--vitz); }
+.car-tab.rav4  { color: var(--rav4); }
+.car-tab.active.vitz { border-bottom-color: var(--vitz); background: var(--vitz-light); }
+.car-tab.active.rav4  { border-bottom-color: var(--rav4); background: var(--rav4-light); }
+
+.content { max-width: 520px; margin: 0 auto; padding: 16px; }
+
+.section-tabs {
+  display: flex;
+  background: #E2E8F0;
+  border-radius: 12px;
+  padding: 4px;
+  margin-bottom: 16px;
+}
+.section-tab {
+  flex: 1;
+  padding: 9px;
+  text-align: center;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 9px;
+  transition: all 0.2s;
+  color: var(--gray);
+  user-select: none;
+}
+.section-tab.active {
+  background: white;
+  color: var(--dark);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.12);
+}
+
+.card {
+  background: white;
+  border-radius: 14px;
+  padding: 20px;
+  margin-bottom: 14px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
+.card-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--gray);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 16px;
+}
+
+.form-group { margin-bottom: 14px; }
+.form-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--gray);
+  margin-bottom: 6px;
+}
+.required { color: #EF4444; }
+.auto-badge {
+  font-size: 10px;
+  background: var(--success);
+  color: white;
+  padding: 2px 7px;
+  border-radius: 100px;
+}
+.form-input {
+  width: 100%;
+  padding: 11px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  font-size: 15px;
+  transition: border-color 0.2s;
+  background: white;
+  color: var(--dark);
+  appearance: none;
+}
+.form-input:focus { outline: none; border-color: #94A3B8; }
+.form-input.calc { background: #F1F5F9; color: var(--gray); cursor: not-allowed; }
+.form-note { font-size: 11px; color: var(--gray); margin-top: 5px; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+.checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+}
+.checkbox-row input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; accent-color: var(--success); }
+.checkbox-row label { font-size: 14px; cursor: pointer; }
+
+.submit-btn {
+  width: 100%;
+  padding: 16px;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s;
+  letter-spacing: 0.5px;
+  margin-top: 4px;
+}
+.submit-btn.vitz { background: var(--vitz); color: white; }
+.submit-btn.rav4  { background: var(--rav4);  color: white; }
+.submit-btn:hover { opacity: 0.88; transform: translateY(-1px); }
+.submit-btn:active { transform: translateY(0); }
+.submit-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.stat-card {
+  background: white;
+  border-radius: 12px;
+  padding: 14px 10px;
+  text-align: center;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
+.stat-value { font-size: 22px; font-weight: 700; color: var(--dark); }
+.stat-unit  { font-size: 10px; color: var(--gray); margin-top: 1px; }
+.stat-label { font-size: 11px; color: var(--gray); margin-top: 5px; }
+
+.table-wrap { overflow-x: auto; }
+.history-table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 360px; }
+.history-table th {
+  background: #F1F5F9;
+  padding: 9px 6px;
+  text-align: center;
+  font-weight: 700;
+  color: var(--gray);
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+.history-table td {
+  padding: 11px 6px;
+  text-align: center;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+.history-table tr:last-child td { border-bottom: none; }
+.history-table tr:hover td { background: #F8FAFC; }
+.fuel-eff { font-weight: 700; }
+.fuel-eff.vitz { color: var(--vitz); }
+.fuel-eff.rav4  { color: var(--rav4); }
+.no-full { font-size: 10px; color: var(--warning); }
+
+.loading { text-align: center; padding: 30px; color: var(--gray); font-size: 14px; }
+.spinner {
+  display: inline-block;
+  width: 26px; height: 26px;
+  border: 3px solid var(--border);
+  border-top-color: var(--gray);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  margin-bottom: 10px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(120px);
+  color: white;
+  padding: 12px 28px;
+  border-radius: 100px;
+  font-size: 14px;
+  font-weight: 600;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  z-index: 1000;
+  white-space: nowrap;
+  pointer-events: none;
+}
+.toast.show { transform: translateX(-50%) translateY(0); }
+.toast.success { background: var(--success); }
+.toast.error   { background: var(--rav4); }
+.toast.info    { background: var(--dark); }
+
+@media (max-width: 400px) {
+  .content { padding: 12px; }
+  .card { padding: 16px; }
+  .stats-grid { gap: 8px; }
+  .stat-value { font-size: 18px; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>⛽ ガソリン管理</h1>
+  <p>ヴィッツ &amp; RAV4</p>
+</header>
+
+<div class="car-tabs">
+  <div class="car-tab vitz active" id="tab-vitz" onclick="switchCar('vitz')">
+    <span class="icon">🚗</span>
+    <span class="name">ヴィッツ</span>
+  </div>
+  <div class="car-tab rav4" id="tab-rav4" onclick="switchCar('rav4')">
+    <span class="icon">🚙</span>
+    <span class="name">RAV4</span>
+  </div>
+</div>
+
+<div class="content">
+
+  <div class="section-tabs">
+    <div class="section-tab active" id="stab-input"   onclick="switchSection('input')">📝 給油を記録</div>
+    <div class="section-tab"        id="stab-history" onclick="switchSection('history')">📊 履歴・統計</div>
+  </div>
+
+  <div id="section-input">
+    <div class="card">
+      <div class="card-title">⛽ 給油情報を入力</div>
+      <form id="fuel-form" onsubmit="submitForm(event)">
+
+        <div class="form-group">
+          <label class="form-label">給油日 <span class="required">*</span></label>
+          <input type="date" class="form-input" id="f-date" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">総走行距離（オドメーター） km <span class="required">*</span></label>
+          <input type="number" class="form-input" id="f-odometer"
+                 placeholder="例: 45230" required min="0" step="1" oninput="calcAll()">
+          <div class="form-note">メーターに表示されている現在の走行距離の数値</div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">給油量 (L) <span class="required">*</span></label>
+            <input type="number" class="form-input" id="f-liters"
+                   placeholder="例: 30.5" required min="0.1" step="0.01" oninput="calcAll()">
+          </div>
+          <div class="form-group">
+            <label class="form-label">単価 (円/L) <span class="required">*</span></label>
+            <input type="number" class="form-input" id="f-unit-price"
+                   placeholder="例: 168" required min="1" step="0.1" oninput="calcAll()">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">金額 (円) <span class="auto-badge">自動計算</span></label>
+            <input type="number" class="form-input calc" id="f-total" placeholder="自動" readonly>
+          </div>
+          <div class="form-group">
+            <label class="form-label">燃費 (km/L) <span class="auto-badge">自動計算</span></label>
+            <input type="number" class="form-input calc" id="f-fuel-eff" placeholder="自動" readonly>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">給油スタンド名</label>
+          <input type="text" class="form-input" id="f-station" placeholder="例: ENEOS 旭川東店">
+        </div>
+
+        <div class="form-group">
+          <div class="checkbox-row">
+            <input type="checkbox" id="f-full-tank" checked>
+            <label for="f-full-tank">満タン給油</label>
+          </div>
+          <div class="form-note">満タン以外の場合はチェックを外す（燃費の計算精度に影響します）</div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">メモ</label>
+          <input type="text" class="form-input" id="f-memo" placeholder="例: オイル交換、車検など">
+        </div>
+
+        <button type="submit" class="submit-btn vitz" id="submit-btn">
+          ✅ 記録する
+        </button>
+
+      </form>
+    </div>
+  </div>
+
+  <div id="section-history" style="display:none;">
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-value" id="stat-avg-fe">--</div>
+        <div class="stat-unit">km/L</div>
+        <div class="stat-label">平均燃費</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="stat-cost">--</div>
+        <div class="stat-unit">円</div>
+        <div class="stat-label">累計費用</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="stat-count">--</div>
+        <div class="stat-unit">回</div>
+        <div class="stat-label">給油回数</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">📋 給油履歴（新しい順）</div>
+      <div id="history-container">
+        <div class="loading"><div class="spinner"></div><br>読み込み中...</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// GAS URL（設定済み）
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbwj_5TbqW9y1tyQs-pdhk8IitQDduQ0iOAokj-L6gCJQmH6Lj7AhZzYayLxibV6XucyDA/exec';
+
+let currentCar    = 'vitz';
+let lastOdometers = { vitz: null, rav4: null };
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('f-date').value = todayStr();
+  fetchLastOdometer('vitz');
+  fetchLastOdometer('rav4');
+});
+
+function switchCar(car) {
+  currentCar = car;
+  ['vitz','rav4'].forEach(c => {
+    document.getElementById('tab-'+c).classList.toggle('active', c === car);
+  });
+  document.getElementById('submit-btn').className = `submit-btn ${car}`;
+  const d = document.getElementById('f-date').value;
+  resetForm();
+  document.getElementById('f-date').value = d;
+  if (document.getElementById('section-history').style.display !== 'none') loadHistory();
+}
+
+function switchSection(sec) {
+  document.getElementById('stab-input').classList.toggle('active',   sec === 'input');
+  document.getElementById('stab-history').classList.toggle('active', sec === 'history');
+  document.getElementById('section-input').style.display   = sec === 'input'   ? 'block' : 'none';
+  document.getElementById('section-history').style.display = sec === 'history' ? 'block' : 'none';
+  if (sec === 'history') loadHistory();
+}
+
+function calcAll() {
+  const liters    = parseFloat(document.getElementById('f-liters').value)     || 0;
+  const unitPrice = parseFloat(document.getElementById('f-unit-price').value) || 0;
+  const odometer  = parseFloat(document.getElementById('f-odometer').value)   || 0;
+
+  if (liters > 0 && unitPrice > 0) {
+    document.getElementById('f-total').value = Math.round(liters * unitPrice);
+  } else {
+    document.getElementById('f-total').value = '';
+  }
+
+  const lastOdo = lastOdometers[currentCar];
+  if (lastOdo && odometer > lastOdo && liters > 0) {
+    const km = odometer - lastOdo;
+    document.getElementById('f-fuel-eff').value = (km / liters).toFixed(2);
+  } else {
+    document.getElementById('f-fuel-eff').value = '';
+  }
+}
+
+async function submitForm(e) {
+  e.preventDefault();
+  const btn = document.getElementById('submit-btn');
+  btn.textContent = '送信中...';
+  btn.disabled    = true;
+
+  const odometer  = parseFloat(document.getElementById('f-odometer').value);
+  const liters    = parseFloat(document.getElementById('f-liters').value);
+  const unitPrice = parseFloat(document.getElementById('f-unit-price').value);
+  const lastOdo   = lastOdometers[currentCar];
+  const driven    = (lastOdo && odometer > lastOdo) ? odometer - lastOdo : null;
+  const fuelEff   = (driven && liters) ? parseFloat((driven / liters).toFixed(2)) : null;
+
+  try {
+    const res = await gasPost({
+      action: 'addRecord',
+      car:    currentCar,
+      data: {
+        date:       document.getElementById('f-date').value,
+        odometer:   odometer,
+        driven:     driven,
+        liters:     liters,
+        unitPrice:  unitPrice,
+        total:      Math.round(liters * unitPrice),
+        fuelEff:    fuelEff,
+        isFullTank: document.getElementById('f-full-tank').checked,
+        station:    document.getElementById('f-station').value.trim(),
+        memo:       document.getElementById('f-memo').value.trim()
+      }
+    });
+
+    if (res.success) {
+      showToast('✅ 記録しました！', 'success');
+      lastOdometers[currentCar] = odometer;
+      resetForm();
+    } else {
+      showToast('❌ ' + (res.error || '保存に失敗しました'), 'error');
+    }
+  } catch (err) {
+    console.error(err);
+    showToast('❌ 通信エラーが発生しました', 'error');
+  }
+
+  btn.textContent = '✅ 記録する';
+  btn.className   = `submit-btn ${currentCar}`;
+  btn.disabled    = false;
+}
+
+async function loadHistory() {
+  const container = document.getElementById('history-container');
+  container.innerHTML = '<div class="loading"><div class="spinner"></div><br>読み込み中...</div>';
+  try {
+    const res = await gasGet({ action: 'getHistory', car: currentCar });
+    if (res.success && res.records) {
+      renderStats(res.records);
+      renderHistory(res.records);
+    } else {
+      container.innerHTML = '<div class="loading">データがありません</div>';
+    }
+  } catch (err) {
+    container.innerHTML = '<div class="loading">読み込みに失敗しました</div>';
+  }
+}
+
+function renderStats(records) {
+  const full  = records.filter(r => r.fuelEff && r.isFullTank);
+  const avgFE = full.length > 0
+    ? (full.reduce((s, r) => s + parseFloat(r.fuelEff), 0) / full.length).toFixed(1)
+    : '--';
+  const total    = records.reduce((s, r) => s + (r.total || 0), 0);
+  const totalStr = total >= 10000
+    ? Math.round(total / 1000) + 'k'
+    : total > 0 ? total.toLocaleString() : '--';
+  document.getElementById('stat-avg-fe').textContent = avgFE;
+  document.getElementById('stat-cost').textContent   = totalStr;
+  document.getElementById('stat-count').textContent  = records.length || '--';
+}
+
+function renderHistory(records) {
+  const container = document.getElementById('history-container');
+  if (!records.length) {
+    container.innerHTML = '<div class="loading">まだ記録がありません</div>';
+    return;
+  }
+  const sorted = [...records].sort((a, b) => new Date(b.date) - new Date(a.date));
+  const rows = sorted.map(r => {
+    const date   = r.date ? r.date.replace(/^\d{4}-/, '') : '--';
+    const driven = r.driven  ? r.driven + 'km' : '--';
+    const liters = r.liters  ? r.liters + 'L'  : '--';
+    const fueStr = r.fuelEff ? r.fuelEff + 'km/L' : '--';
+    const total  = r.total   ? '¥' + Number(r.total).toLocaleString() : '--';
+    const noFull = !r.isFullTank ? ' <span class="no-full">*部分</span>' : '';
+    return `<tr>
+      <td>${date}</td>
+      <td>${driven}</td>
+      <td>${liters}</td>
+      <td class="fuel-eff ${currentCar}">${fueStr}${noFull}</td>
+      <td>${total}</td>
+    </tr>`;
+  }).join('');
+  container.innerHTML = `
+    <div class="table-wrap">
+    <table class="history-table">
+      <thead><tr>
+        <th>日付</th><th>走行距離</th><th>給油量</th><th>燃費</th><th>金額</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+    </div>
+    <div style="font-size:11px;color:var(--gray);margin-top:10px;">*部分 = 満タンでない記録（燃費の参考値）</div>`;
+}
+
+async function fetchLastOdometer(car) {
+  try {
+    const res = await gasGet({ action: 'getLastOdometer', car });
+    if (res.success && res.odometer) lastOdometers[car] = res.odometer;
+  } catch (e) { }
+}
+
+async function gasPost(payload) {
+  const res = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify(payload) });
+  return res.json();
+}
+
+async function gasGet(params) {
+  const qs  = new URLSearchParams(params).toString();
+  const res = await fetch(`${GAS_URL}?${qs}`);
+  return res.json();
+}
+
+function todayStr() {
+  return new Date().toLocaleDateString('sv-SE');
+}
+
+function resetForm() {
+  ['f-odometer','f-liters','f-unit-price','f-total','f-fuel-eff','f-station','f-memo']
+    .forEach(id => document.getElementById(id).value = '');
+  document.getElementById('f-full-tank').checked = true;
+  document.getElementById('f-date').value = todayStr();
+}
+
+function showToast(msg, type = 'info') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className   = `toast ${type} show`;
+  setTimeout(() => el.classList.remove('show'), 3500);
+}
+</script>
+</body>
+</html>
